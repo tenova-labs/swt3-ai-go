@@ -6,11 +6,37 @@ Witness your AI. Prove it followed the rules. Cryptographic accountability for e
 
 **SWT3 AI Witness SDK for Go**: mint, verify, and sign SWT3 witness anchors with cross-language parity. Zero external dependencies -- standard library only.
 
-**114 procedures | 62 namespaces | 10 SDKs | Zero dependencies**
+**266 procedures | 75 namespaces | 10 SDKs | Zero dependencies**
 
 Go is the dominant language for backend infrastructure at scale. Kubernetes operators, API gateways, data pipelines, and inference orchestrators are overwhelmingly written in Go. This package gives infrastructure teams the same cryptographic witnessing primitives available in the Python, TypeScript, Rust, C#, Ruby, Swift, and Kotlin SDKs, with zero external dependencies and byte-identical output across all 10 implementations.
 
 EU AI Act GPAI transparency obligations enforced since **August 2, 2026**. High-risk enforcement follows **December 2, 2027**. This SDK gives you the cryptographic primitives for both.
+
+## What's New in v0.7.0
+
+AI does not run in a vacuum. It authenticates with service accounts, runs on hardware with supply chains, and consumes enough electricity to reshape power grids. v0.7.0 extends the SWT3 protocol down the full AI infrastructure stack with 22 new procedures across three families: credential governance (NHI), hardware supply chains (HBOM/DPP), and energy management (ADR). Every new anchor type verifies with the existing `MintFingerprint` function -- no module update required.
+
+**Why this matters for Go:** Go is where AI infrastructure lives. The Kubernetes operator scheduling GPU workloads, the API gateway routing inference requests, the data pipeline feeding training data -- all written in Go. These new procedure families map directly to what Go services manage. A Go-based orchestrator can now verify NHI credential rotation anchors, validate hardware inventory attestations, and confirm demand response settlement anchors -- all with the same `MintFingerprint` call. The fingerprint formula is unchanged. A credential rotation anchor and an inference anchor verify identically.
+
+### 22 New Procedures
+
+**NHI (Credential Governance) -- 6 procedures:** NHI-SCOPE.1, NHI-LIFE.1, NHI-PRIV.1, NHI-ROT.1, NHI-DEL.1, NHI-REV.1. Independent audit trail for every service account, API key, and machine credential your AI agents use. NIST 800-207 (Zero Trust), EU NIS-2 Art. 21, and CISA agentic AI guidance all require credential governance evidence.
+
+**HBOM/DPP (Hardware + Battery Passport) -- 10 procedures:** HBOM-INV.1, HBOM-LIFE.1, HBOM-THERM.1, HBOM-WATER.1, HBOM-PUE.1, HBOM-SUPPLY.1, DPP-SOH.1, DPP-CHRG.1, DPP-DEGRAD.1, DPP-EOL.1. EU Battery Regulation (Feb 2027) digital passports, CRA hardware BOMs, and EED PUE reporting.
+
+**ADR (Energy + Demand Response) -- 6 procedures:** ADR-EVENT.1, ADR-BASE.1, ADR-CURT.1, ADR-SETTLE.1, ADR-CARBON.1, ADR-GRID.1. Independent attestation for demand response events, baseline measurement, curtailment, settlement, carbon credits, and grid signal correlation.
+
+### Updated Coverage
+
+- 266 procedures across 75 namespaces (was 118/64)
+- 59 MCP tools (was 37)
+- 10 SDK languages with byte-identical output
+- 36 framework crosswalks, 237 compliance guides
+- ~2,950 tests passing across 5 languages
+
+## What's New in v0.6.6
+
+Supply chain accountability. Four new procedures, a CI/CD gate action, and OTel GenAI conventions across the ecosystem. Every improvement flows through to Go because fingerprints are identical across all 10 languages.
 
 ## What's New in v0.6.5
 
