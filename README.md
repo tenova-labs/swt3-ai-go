@@ -6,11 +6,31 @@ Witness your AI. Prove it followed the rules. Cryptographic accountability for e
 
 **SWT3 AI Witness SDK for Go**: mint, verify, and sign SWT3 witness anchors with cross-language parity. Zero external dependencies -- standard library only.
 
-**266 procedures | 75 namespaces | 10 SDKs | Zero dependencies**
+**275 procedures | 77 namespaces | 10 SDKs | Zero dependencies**
 
 Go is the dominant language for backend infrastructure at scale. Kubernetes operators, API gateways, data pipelines, and inference orchestrators are overwhelmingly written in Go. This package gives infrastructure teams the same cryptographic witnessing primitives available in the Python, TypeScript, Rust, C#, Ruby, Swift, and Kotlin SDKs, with zero external dependencies and byte-identical output across all 10 implementations.
 
 EU AI Act GPAI transparency obligations enforced since **August 2, 2026**. High-risk enforcement follows **December 2, 2027**. This SDK gives you the cryptographic primitives for both.
+
+## What's New in v0.7.1
+
+MCP security is under fire. OWASP published the MCP Top 10 in 2026 -- 30-82% of MCP servers are vulnerable to tool poisoning, insufficient authentication, and shadow server proliferation. v0.7.1 adds three new procedures (AI-MCP.2, AI-MCP.3, AI-MCP.4) that close the remaining OWASP gaps. SWT3 is now the first protocol to cover all 10 OWASP MCP risks with cryptographic evidence. Every new anchor type verifies with the existing `MintFingerprint` function -- no module update required.
+
+**Why this matters for Go:** Go API gateways and Kubernetes operators are the infrastructure layer that routes MCP traffic between agents and tool servers. When your Go gateway processes witness anchors from an MCP pipeline, the new MCP security anchors (tool schema integrity, server authentication, server discovery) verify with the same `MintFingerprint` call. A Go admission controller can reject workloads that lack MCP server auth attestation. A Go sidecar proxy can validate tool integrity anchors in real-time. Zero module changes -- the fingerprint formula is unchanged.
+
+### 3 New Procedures
+
+- **AI-MCP.2** (Tool Integrity Attestation): Detects tool schema drift between connect and invoke. OWASP MCP-03.
+- **AI-MCP.3** (Server Auth Attestation): Records auth method and verification. No auth = FAIL = IA-9 finding. OWASP MCP-07.
+- **AI-MCP.4** (Server Discovery Attestation): Shadow server detection via allowlist check. OWASP MCP-09.
+
+### Updated Coverage
+
+- 275 procedures across 77 namespaces (was 266/75)
+- 63 MCP tools (was 59)
+- 10 SDK languages with byte-identical output
+- 77 framework crosswalks, 250 compliance guides
+- ~2,950 tests passing across 5 languages
 
 ## What's New in v0.7.0
 
