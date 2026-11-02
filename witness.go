@@ -52,6 +52,12 @@ func (w *Witness) mint(procedureID string, fa, fb, fc float64) WitnessPayload {
 	if w.Config.PurposeClass != "" {
 		p.PurposeClass = w.Config.PurposeClass
 	}
+	if w.Config.AuthorizationExpires != 0 {
+		p.AuthorizationExpires = w.Config.AuthorizationExpires
+	}
+	if w.Config.AuthorizationScope != "" {
+		p.AuthorizationScope = w.Config.AuthorizationScope
+	}
 	if w.Config.SigningKey != "" {
 		p.PayloadSignature = SignPayload(w.Config.SigningKey, fp, w.Config.AgentID)
 		p.SigningAlgorithm = "hmac-sha256"
@@ -216,6 +222,121 @@ func (w *Witness) WitnessNhiRevocation(credentialID string, reason int, cascade 
 			"revoked_credential_hash": credHash,
 			"reason_code":             reason,
 			"cascade":                 cascade,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessNhiExpiration witnesses credential expiration event (NHI-EXPIRE.1).
+func (w *Witness) WitnessNhiExpiration(credentialID string, expiresEpochMs int64, renewalPossible bool, gracePeriodSeconds int) WitnessPayload {
+	credHash := Sha256Truncated(credentialID, 16)
+	fa := hashToFactor(credHash)
+	fb := float64(expiresEpochMs / 1000)
+	renewal := 0
+	if renewalPossible {
+		renewal = 1
+	}
+	fc := float64(renewal | (gracePeriodSeconds << 8))
+	p := w.mint("NHI-EXPIRE.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		label := "permanent"
+		if renewalPossible {
+			label = "renewable"
+		}
+		p.AIModelID = "nhi-expire-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":             "nhi-governance",
+			"credential_hash":     credHash,
+			"expires_epoch_ms":    expiresEpochMs,
+			"renewal_possible":    renewalPossible,
+			"grace_period_seconds": gracePeriodSeconds,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── MCP Tool Integrity (AI-MCP.2) ──────────────────────────────────
+
+// WitnessToolIntegrity witnesses MCP tool integrity attestation (AI-MCP.2).
+// Hashes the tool schema to detect poisoning (OWASP MCP-03) and rug pulls.
+func (w *Witness) WitnessToolIntegrity(toolName, toolSchema string, invocationSeq int, previousSchemaHash string) WitnessPayload {
+	schemaHash := Sha256Truncated(toolSchema, 16)
+	fa := hashToFactor(schemaHash)
+	fb := float64(invocationSeq)
+	drift := 0
+	if previousSchemaHash != "" && previousSchemaHash != schemaHash {
+		drift = 1
+	}
+	fc := float64(drift)
+	p := w.mint("AI-MCP.2", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		p.AIModelID = "mcp-tool-" + toolName
+		p.AIContext = map[string]interface{}{
+			"provider":       "mcp-tool-integrity",
+			"tool_name":      toolName,
+			"schema_hash":    schemaHash,
+			"invocation_seq": invocationSeq,
+			"schema_drift":   drift == 1,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── MCP Server Authentication (AI-MCP.3) ──────────────────────────
+
+// WitnessServerAuth witnesses MCP server authentication attestation (AI-MCP.3).
+// Records auth method before tool invocation. FAIL when no auth (method=0).
+func (w *Witness) WitnessServerAuth(authMethod int, credentialValiditySeconds int, mutualAuth bool) WitnessPayload {
+	fa := float64(authMethod)
+	fb := float64(credentialValiditySeconds)
+	mutual := 0
+	if mutualAuth {
+		mutual = 1
+	}
+	fc := float64(mutual)
+	p := w.mint("AI-MCP.3", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "none", 1: "api_key", 2: "oauth", 3: "mtls", 4: "did"}
+		label := labels[authMethod]
+		if label == "" {
+			label = "unknown-" + strconv.Itoa(authMethod)
+		}
+		p.AIModelID = "mcp-auth-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":                     "mcp-server-auth",
+			"auth_method":                  authMethod,
+			"credential_validity_seconds":  credentialValiditySeconds,
+			"mutual_auth":                  mutualAuth,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── MCP Server Discovery (AI-MCP.4) ───────────────────────────────
+
+// WitnessServerDiscovery witnesses MCP server discovery attestation (AI-MCP.4).
+// Records server inventory and unauthorized server detection.
+func (w *Witness) WitnessServerDiscovery(discoveryMethod int, serversFound int, unauthorizedCount int) WitnessPayload {
+	fa := float64(discoveryMethod)
+	fb := float64(serversFound)
+	fc := float64(unauthorizedCount)
+	p := w.mint("AI-MCP.4", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "manual", 1: "dns-sd", 2: "mdns", 3: "registry", 4: "network"}
+		label := labels[discoveryMethod]
+		if label == "" {
+			label = "method-" + strconv.Itoa(discoveryMethod)
+		}
+		p.AIModelID = "mcp-discovery-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":           "mcp-server-discovery",
+			"discovery_method":   discoveryMethod,
+			"servers_found":      serversFound,
+			"unauthorized_count": unauthorizedCount,
 		}
 	}
 	w.enqueue(p)
@@ -531,6 +652,279 @@ func (w *Witness) WitnessCarbonCredit(creditType int, quantityMwh float64, regis
 			"credit_type":   creditType,
 			"quantity_mwh":  quantityMwh,
 			"registry_hash": registryHash,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── Harness Governance (v0.7.2) ─────────────────────────────────────
+
+// WitnessOrchestrationTopology witnesses orchestration topology selection (AI-ORCH.1).
+// Records the routing pattern chosen by an agent harness. GOVERN 1.3, Art. 9.
+func (w *Witness) WitnessOrchestrationTopology(topology int, agentCount int, dependencyDepth int) WitnessPayload {
+	fa := float64(topology)
+	fb := float64(agentCount)
+	if fb < 0 {
+		fb = 0
+	}
+	fc := float64(dependencyDepth)
+	if fc < 0 {
+		fc = 0
+	}
+	p := w.mint("AI-ORCH.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "sequential", 1: "parallel", 2: "hierarchical", 3: "hybrid", 4: "mesh"}
+		label := labels[topology]
+		if label == "" {
+			label = "topology-" + strconv.Itoa(topology)
+		}
+		p.AIModelID = "orch-topology-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":         "harness-governance",
+			"topology":         label,
+			"agent_count":      agentCount,
+			"dependency_depth": dependencyDepth,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessAgentHandoff witnesses inter-agent handoff (AI-ORCH.2).
+// Records identity linkage with permission delta. GOVERN 1.3, Art. 9.
+func (w *Witness) WitnessAgentHandoff(delegatorID string, delegateID string, permissionDelta int) WitnessPayload {
+	d1Hash := Sha256Truncated(delegatorID, 16)
+	d2Hash := Sha256Truncated(delegateID, 16)
+	fa := hashToFactor(d1Hash)
+	fb := hashToFactor(d2Hash)
+	delta := permissionDelta
+	if delta > 1 {
+		delta = 1
+	}
+	if delta < -1 {
+		delta = -1
+	}
+	fc := float64(delta)
+	p := w.mint("AI-ORCH.2", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		deltaLabel := "lateral"
+		if delta > 0 {
+			deltaLabel = "escalation"
+		} else if delta < 0 {
+			deltaLabel = "restriction"
+		}
+		p.AIModelID = "orch-handoff-" + deltaLabel
+		p.AIContext = map[string]interface{}{
+			"provider":         "harness-governance",
+			"delegator_hash":   d1Hash,
+			"delegate_hash":    d2Hash,
+			"permission_delta": delta,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessContextWindow witnesses context window management (AI-CTX.1).
+// Records truncation, summarization, or eviction events. MEASURE 2.6, Art. 13.
+func (w *Witness) WitnessContextWindow(tokensBefore int, tokensAfter int, evictionMethod int) WitnessPayload {
+	fa := float64(tokensBefore)
+	if fa < 0 {
+		fa = 0
+	}
+	fb := float64(tokensAfter)
+	if fb < 0 {
+		fb = 0
+	}
+	fc := float64(evictionMethod)
+	p := w.mint("AI-CTX.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "none", 1: "truncation", 2: "summarization", 3: "sliding_window", 4: "priority_eviction"}
+		label := labels[evictionMethod]
+		if label == "" {
+			label = "method-" + strconv.Itoa(evictionMethod)
+		}
+		p.AIModelID = "ctx-window-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":        "harness-governance",
+			"tokens_before":   tokensBefore,
+			"tokens_after":    tokensAfter,
+			"eviction_method": label,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessSandboxEnforcement witnesses sandbox enforcement attestation (AI-SAND.1).
+// Records the harness's own report of tool restriction compliance. SA-11(8), Art. 15.
+func (w *Witness) WitnessSandboxEnforcement(toolsDeclared int, toolsInvoked int, violations int) WitnessPayload {
+	fa := float64(toolsDeclared)
+	if fa < 0 {
+		fa = 0
+	}
+	fb := float64(toolsInvoked)
+	if fb < 0 {
+		fb = 0
+	}
+	fc := float64(violations)
+	if fc < 0 {
+		fc = 0
+	}
+	p := w.mint("AI-SAND.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		label := "clean"
+		if violations > 0 {
+			label = "violation"
+		}
+		p.AIModelID = "sandbox-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":       "harness-governance",
+			"tools_declared": toolsDeclared,
+			"tools_invoked":  toolsInvoked,
+			"violations":     violations,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessEvalGate witnesses eval gate decision (AI-GATE.1).
+// Records pass/fail deployment gating. Auto-computes gateScore when -1. MEASURE 2.5, Art. 9(7).
+func (w *Witness) WitnessEvalGate(totalEvals int, evalsPassed int, gateScore int) WitnessPayload {
+	fa := float64(totalEvals)
+	if fa < 0 {
+		fa = 0
+	}
+	fb := float64(evalsPassed)
+	if fb < 0 {
+		fb = 0
+	}
+	score := gateScore
+	if score < 0 {
+		denom := totalEvals
+		if denom == 0 {
+			denom = 1
+		}
+		score = (evalsPassed * 100) / denom
+	}
+	if score > 100 {
+		score = 100
+	}
+	fc := float64(score)
+	p := w.mint("AI-GATE.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		label := "fail"
+		if score >= 70 {
+			label = "pass"
+		}
+		p.AIModelID = "eval-gate-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":     "harness-governance",
+			"total_evals":  totalEvals,
+			"evals_passed": evalsPassed,
+			"gate_score":   score,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── A2A: Agent-to-Agent Governance ──────────────────────────────────
+
+// WitnessTaskLifecycle witnesses A2A task lifecycle state (AI-A2A.1).
+// Records task state transitions, latency, and delegation depth.
+func (w *Witness) WitnessTaskLifecycle(stateCode int, latencyMs int, depth int) WitnessPayload {
+	fa := float64(stateCode)
+	fb := float64(latencyMs)
+	fc := float64(depth)
+	p := w.mint("AI-A2A.1", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "submitted", 1: "working", 2: "input-required", 3: "completed", 4: "failed", 5: "canceled"}
+		label := labels[stateCode]
+		if label == "" {
+			label = "state-" + strconv.Itoa(stateCode)
+		}
+		p.AIModelID = "a2a-task-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":   "a2a-governance",
+			"state_code": stateCode,
+			"latency_ms": latencyMs,
+			"depth":      depth,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessAgentCardDiscovery witnesses A2A agent card discovery (AI-A2A.2).
+// Records discovery method, agent count, and verified agent count.
+func (w *Witness) WitnessAgentCardDiscovery(discoveryMethod int, agentsDiscovered int, verifiedCount int) WitnessPayload {
+	fa := float64(discoveryMethod)
+	fb := float64(agentsDiscovered)
+	fc := float64(verifiedCount)
+	p := w.mint("AI-A2A.2", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "manual", 1: "well-known", 2: "registry", 3: "dns-sd", 4: "broadcast"}
+		label := labels[discoveryMethod]
+		if label == "" {
+			label = "method-" + strconv.Itoa(discoveryMethod)
+		}
+		p.AIModelID = "a2a-discovery-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":          "a2a-governance",
+			"discovery_method":  discoveryMethod,
+			"agents_discovered": agentsDiscovered,
+			"verified_count":    verifiedCount,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// WitnessContextChain witnesses A2A context chain propagation (AI-A2A.3).
+// Records chain length, context identity (hashed), and agent count.
+func (w *Witness) WitnessContextChain(chainLength int, contextID string, agentsInChain int) WitnessPayload {
+	fa := float64(chainLength)
+	ctxHash := Sha256Hex(contextID, 8)
+	fb := hashToFactor(ctxHash)
+	fc := float64(agentsInChain)
+	p := w.mint("AI-A2A.3", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		p.AIModelID = "a2a-context-chain-" + strconv.Itoa(chainLength)
+		p.AIContext = map[string]interface{}{
+			"provider":        "a2a-governance",
+			"chain_length":    chainLength,
+			"context_id_hash": ctxHash,
+			"agents_in_chain": agentsInChain,
+		}
+	}
+	w.enqueue(p)
+	return p
+}
+
+// ── MCP OAuth Token Binding (AI-MCP.5) ─────────────────────────────
+
+// WitnessOauthTokenBinding witnesses MCP OAuth token binding (AI-MCP.5).
+// Records token binding events, scope count, and binding strength.
+func (w *Witness) WitnessOauthTokenBinding(eventType int, scopeCount int, bindingStrength int) WitnessPayload {
+	fa := float64(eventType)
+	fb := float64(scopeCount)
+	fc := float64(bindingStrength)
+	p := w.mint("AI-MCP.5", fa, fb, fc)
+	if w.Config.ClearingLevel <= ClearingStandard {
+		labels := map[int]string{0: "issued", 1: "refreshed", 2: "revoked", 3: "expired", 4: "downscoped"}
+		label := labels[eventType]
+		if label == "" {
+			label = "event-" + strconv.Itoa(eventType)
+		}
+		p.AIModelID = "mcp-oauth-" + label
+		p.AIContext = map[string]interface{}{
+			"provider":         "mcp-oauth-binding",
+			"event_type":       eventType,
+			"scope_count":      scopeCount,
+			"binding_strength": bindingStrength,
 		}
 	}
 	w.enqueue(p)

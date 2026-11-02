@@ -447,6 +447,94 @@ func TestWitnessGridSignalContextStripped(t *testing.T) {
 	}
 }
 
+// ── A2A Tests ───────────────────────────────────────────────────────
+
+func TestWitnessTaskLifecycle(t *testing.T) {
+	w := newTestWitness(ClearingStandard)
+	p := w.WitnessTaskLifecycle(3, 250, 2)
+	if p.ProcedureID != "AI-A2A.1" {
+		t.Errorf("ProcedureID = %q, want AI-A2A.1", p.ProcedureID)
+	}
+	if p.FactorA != 3 {
+		t.Errorf("FactorA = %f, want 3", p.FactorA)
+	}
+	if p.FactorB != 250 {
+		t.Errorf("FactorB = %f, want 250", p.FactorB)
+	}
+	if p.FactorC != 2 {
+		t.Errorf("FactorC = %f, want 2", p.FactorC)
+	}
+	if p.AIContext == nil {
+		t.Error("AIContext should not be nil at clearing level 1")
+	}
+	if len(w.Buffer) != 1 {
+		t.Errorf("Buffer length = %d, want 1", len(w.Buffer))
+	}
+}
+
+func TestWitnessAgentCardDiscovery(t *testing.T) {
+	w := newTestWitness(ClearingStandard)
+	p := w.WitnessAgentCardDiscovery(1, 5, 3)
+	if p.ProcedureID != "AI-A2A.2" {
+		t.Errorf("ProcedureID = %q, want AI-A2A.2", p.ProcedureID)
+	}
+	if p.FactorA != 1 {
+		t.Errorf("FactorA = %f, want 1", p.FactorA)
+	}
+	if p.FactorB != 5 {
+		t.Errorf("FactorB = %f, want 5", p.FactorB)
+	}
+	if p.FactorC != 3 {
+		t.Errorf("FactorC = %f, want 3", p.FactorC)
+	}
+	if p.AIContext == nil {
+		t.Error("AIContext should not be nil at clearing level 1")
+	}
+}
+
+func TestWitnessOauthTokenBinding(t *testing.T) {
+	w := newTestWitness(ClearingStandard)
+	p := w.WitnessOauthTokenBinding(0, 4, 2)
+	if p.ProcedureID != "AI-MCP.5" {
+		t.Errorf("ProcedureID = %q, want AI-MCP.5", p.ProcedureID)
+	}
+	if p.FactorA != 0 {
+		t.Errorf("FactorA = %f, want 0", p.FactorA)
+	}
+	if p.FactorB != 4 {
+		t.Errorf("FactorB = %f, want 4", p.FactorB)
+	}
+	if p.FactorC != 2 {
+		t.Errorf("FactorC = %f, want 2", p.FactorC)
+	}
+	if p.AIContext == nil {
+		t.Error("AIContext should not be nil at clearing level 1")
+	}
+}
+
+func TestWitnessContextChain(t *testing.T) {
+	w := newTestWitness(ClearingStandard)
+	p := w.WitnessContextChain(3, "ctx-abc-123", 5)
+	if p.ProcedureID != "AI-A2A.3" {
+		t.Errorf("ProcedureID = %q, want AI-A2A.3", p.ProcedureID)
+	}
+	if p.FactorA != 3 {
+		t.Errorf("FactorA = %f, want 3", p.FactorA)
+	}
+	// fb should be hashToFactor(sha256("ctx-abc-123")[:8])
+	expectedHash := Sha256Hex("ctx-abc-123", 8)
+	expectedFb := hashToFactor(expectedHash)
+	if p.FactorB != expectedFb {
+		t.Errorf("FactorB = %f, want %f (hash of contextID)", p.FactorB, expectedFb)
+	}
+	if p.FactorC != 5 {
+		t.Errorf("FactorC = %f, want 5", p.FactorC)
+	}
+	if p.AIContext == nil {
+		t.Error("AIContext should not be nil at clearing level 1")
+	}
+}
+
 // ── Cross-Cutting Tests ─────────────────────────────────────────────
 
 func TestFlush(t *testing.T) {

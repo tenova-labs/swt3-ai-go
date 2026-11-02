@@ -1,7 +1,7 @@
 package swt3
 
 // Version is the SDK version.
-const Version = "0.7.0"
+const Version = "0.8.0"
 
 // ClearingLevel defines the data sensitivity tier for witness anchors.
 type ClearingLevel int
@@ -44,6 +44,8 @@ type WitnessPayload struct {
 	LegalBasis           string                 `json:"legal_basis,omitempty"`
 	PurposeClass         string                 `json:"purpose_class,omitempty"`
 	AuthorizationID      string                 `json:"authorization_id,omitempty"`
+	AuthorizationExpires int64                  `json:"authorization_expires,omitempty"`
+	AuthorizationScope   string                 `json:"authorization_scope,omitempty"`
 	AIContext            map[string]interface{} `json:"ai_context,omitempty"`
 	CycleID              string                 `json:"cycle_id,omitempty"`
 	LifecycleStage       int                    `json:"lifecycle_stage,omitempty"`
@@ -73,7 +75,9 @@ type WitnessConfig struct {
 	SigningKey    string        `json:"signing_key,omitempty"`
 	Jurisdiction  string        `json:"jurisdiction,omitempty"`
 	LegalBasis    string        `json:"legal_basis,omitempty"`
-	PurposeClass  string        `json:"purpose_class,omitempty"`
-	SamplingRate  float64       `json:"sampling_rate,omitempty"`  // 0.0-1.0, default 1.0
+	PurposeClass         string        `json:"purpose_class,omitempty"`
+	AuthorizationExpires int64         `json:"authorization_expires,omitempty"` // epoch ms
+	AuthorizationScope   string        `json:"authorization_scope,omitempty"`
+	SamplingRate         float64       `json:"sampling_rate,omitempty"` // 0.0-1.0, default 1.0
 	SamplingRates map[string]float64 `json:"sampling_rates,omitempty"` // per-procedure overrides
 }

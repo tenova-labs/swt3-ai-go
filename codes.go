@@ -106,3 +106,21 @@ const (
 	ADRSignalFrequencyRegulation = 4
 	ADRSignalVoltageSupport      = 5
 )
+
+// Orchestration topology codes for AI-ORCH.1.
+const (
+	TopoSequential   = 0
+	TopoParallel     = 1
+	TopoHierarchical = 2
+	TopoHybrid       = 3
+	TopoMesh         = 4
+)
+
+// Context eviction method codes for AI-CTX.1.
+const (
+	EvictionNone             = 0
+	EvictionTruncation       = 1
+	EvictionSummarization    = 2
+	EvictionSlidingWindow    = 3
+	EvictionPriorityEviction = 4
+)
