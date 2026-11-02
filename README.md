@@ -6,7 +6,7 @@ Witness your AI. Prove it followed the rules. Cryptographic accountability for e
 
 **SWT3™ AI Witness SDK for Go**: mint, verify, and sign SWT3 witness anchors with cross-language parity. Zero external dependencies -- standard library only.
 
-**294 procedures | 10 namespaces | 93 frameworks | 11 SDKs | Zero dependencies**
+**294 procedures | 10 namespaces | 98 frameworks | 11 SDKs | Zero dependencies**
 
 Go is the dominant language for backend infrastructure at scale. Kubernetes operators, API gateways, data pipelines, and inference orchestrators are overwhelmingly written in Go. This package gives infrastructure teams the same cryptographic witnessing primitives available in the Python, TypeScript, Rust, C#, Ruby, Swift, and Kotlin SDKs, with zero external dependencies and byte-identical output across all 10 implementations.
 
@@ -16,37 +16,7 @@ EU AI Act GPAI transparency obligations enforced since **August 2, 2026**. High-
 
 ---
 
-## v8.1.0 -- Hierarchical Milestone Merkle Trees
-
-v8.0.0 put AI, infrastructure, and construction evidence into the same Merkle tree. v8.1.0 gives that tree hierarchical structure. A $12M commercial build has phases. A loan underwriting pipeline has stages. A battery manufacturing line has checkpoints. Flat daily Merkle roots cannot express "Phase 2 cannot begin until every milestone in Phase 1 has a passing attestation." Hierarchical milestone trees can.
-
-The new three-tier architecture: **Structure > Phase > Milestone**. Each tier has its own domain-separated Merkle root. A single inclusion proof can verify that a specific witness anchor exists within a specific milestone, within a specific phase, within the overall structure -- three levels of cryptographic commitment in one proof.
-
-**Why this matters for Go:** Go is the control plane language for the systems where phased processes actually run. Kubernetes operators that orchestrate ML training pipelines, manufacturing execution systems that gate production stages, and construction management platforms that enforce inspection sequences -- all Go. The hierarchical Merkle tree maps directly to what these systems already model: ordered stages with completion requirements. A Kubernetes operator managing a model retraining pipeline calls `MintFingerprint` at each stage gate. The three-tier proof says "data validation passed, training completed within drift bounds, and the champion-challenger evaluation approved deployment" -- in one cryptographic commitment that any auditor can verify without access to the cluster. The `swt3-infra-witness` binary's infrastructure anchors now sit inside milestone trees alongside AI inference anchors, so a single proof can span from "agent decided to scale the cluster" through "CloudTrail confirmed the scaling" through "the model served its first inference on the new capacity."
-
-```
-Hierarchical Milestone Merkle Tree (v8.1.0)
-  Structure Root (SHA-256)
-    |-- Phase: Foundation
-    |     |-- Milestone: Soil Test
-    |     |     |-- CON-STR.1 PASS (leaf)
-    |     |     |-- CON-ENV.1 PASS (leaf)
-    |     |-- Milestone: Rebar Inspection
-    |           |-- CON-STR.1 PASS (leaf)
-    |-- Phase: Framing
-          |-- Milestone: Steel Erection
-          |     |-- CON-STR.1 PASS (leaf)
-          |     |-- CON-SAF.1 PASS (leaf)
-          |-- [GATE: all Foundation milestones must pass]
-```
-
-**New in this release:**
-- Three-tier Merkle hashing with domain-separated prefixes (`SWT3:MILESTONE:`, `SWT3:PHASE:`, `SWT3:STRUCTURE:`)
-- Phase-gate enforcement with emergency override and scope amendment support
-- Multi-tier inclusion proofs (milestone > phase > structure)
-- Cross-phase consistency checks
-- `swt3 exposure` CLI -- zero-network regulatory exposure calculator
-- 294 procedures, 93 frameworks, 47 adapters, 11 SDK languages
+- 294 procedures, 98 frameworks, 47 adapters, 11 SDK languages
 
 ---
 
@@ -78,7 +48,7 @@ swt3-infra-witness --format cloudtrail --input cloudtrail-events.json
 The infrastructure anchor format uses the AUD (Audit & Accountability) UCT code:
 
 ```
-SWT3-E-VULTR-AUD-INF-OCSF.1-PASS-1730380800-63bc4d83d6b9
+SWT3-E-AWS-AUD-INF-OCSF.1-PASS-1730380800-63bc4d83d6b9
 ```
 
 Raw audit data never leaves your account. Only the canonical hash and a human-readable summary are transmitted. The canonical hash uses SWT3 Deterministic Canonical JSON -- cross-language parity verified between Go and TypeScript with byte-identical output.
@@ -162,7 +132,7 @@ v0.7.9 is the ecosystem adapter release. Four new provider adapters (Groq, Toget
 
 New guides: [OpenAI GPT](https://sovereign.tenova.io/guides/openai-gpt-compliance-witnessing.html) | [Anthropic Claude](https://sovereign.tenova.io/guides/anthropic-claude-compliance-witnessing.html) | [Google Vertex/Gemini](https://sovereign.tenova.io/guides/google-vertex-gemini-compliance-witnessing.html) | [LangChain/LangGraph](https://sovereign.tenova.io/guides/langchain-langgraph-compliance-witnessing.html) | [DeepSeek](https://sovereign.tenova.io/guides/deepseek-gpai-compliance-witnessing.html) | [Groq](https://sovereign.tenova.io/guides/groq-compliance-witnessing.html)
 
-**Why this matters for Go:** Go API gateways, Kubernetes operators, and webhook receivers that verify anchors from mixed-provider environments now cover 47 adapters -- zero module changes via `MintFingerprint`. Go is the natural language for infrastructure that sits between the `@tenova/swt3-mcp` MCP server (75 tools, 93 frameworks) and downstream consumers: an envoy sidecar verifying anchors, a Kubernetes admission controller gating deployments on compliance evidence, or a webhook receiver aggregating anchor streams from multiple MCP servers. Every adapter-produced fingerprint is byte-identical to this module's output.
+**Why this matters for Go:** Go API gateways, Kubernetes operators, and webhook receivers that verify anchors from mixed-provider environments now cover 47 adapters -- zero module changes via `MintFingerprint`. Go is the natural language for infrastructure that sits between the `@tenova/swt3-mcp` MCP server (75 tools, 98 frameworks) and downstream consumers: an envoy sidecar verifying anchors, a Kubernetes admission controller gating deployments on compliance evidence, or a webhook receiver aggregating anchor streams from multiple MCP servers. Every adapter-produced fingerprint is byte-identical to this module's output.
 
 v0.7.9 also aligns all MCP discovery metadata (`mcp.json`, `agent-card.json`, `llms.txt`, `server.json`) to report identical version numbers and counts. Agent discovery bots and MCP crawlers see consistent metadata everywhere.
 
