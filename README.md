@@ -16,13 +16,47 @@ EU AI Act GPAI transparency obligations enforced since **August 2, 2026**. High-
 
 ---
 
-## v0.8.0 -- Full Stack Governance
+## v8.1.0 -- Hierarchical Milestone Merkle Trees
 
-v0.8.0 is the release where SWT3 grows beyond AI inference into full stack governance.
+v8.0.0 put AI, infrastructure, and construction evidence into the same Merkle tree. v8.1.0 gives that tree hierarchical structure. A $12M commercial build has phases. A loan underwriting pipeline has stages. A battery manufacturing line has checkpoints. Flat daily Merkle roots cannot express "Phase 2 cannot begin until every milestone in Phase 1 has a passing attestation." Hierarchical milestone trees can.
+
+The new three-tier architecture: **Structure > Phase > Milestone**. Each tier has its own domain-separated Merkle root. A single inclusion proof can verify that a specific witness anchor exists within a specific milestone, within a specific phase, within the overall structure -- three levels of cryptographic commitment in one proof.
+
+**Why this matters for Go:** Go is the control plane language for the systems where phased processes actually run. Kubernetes operators that orchestrate ML training pipelines, manufacturing execution systems that gate production stages, and construction management platforms that enforce inspection sequences -- all Go. The hierarchical Merkle tree maps directly to what these systems already model: ordered stages with completion requirements. A Kubernetes operator managing a model retraining pipeline calls `MintFingerprint` at each stage gate. The three-tier proof says "data validation passed, training completed within drift bounds, and the champion-challenger evaluation approved deployment" -- in one cryptographic commitment that any auditor can verify without access to the cluster. The `swt3-infra-witness` binary's infrastructure anchors now sit inside milestone trees alongside AI inference anchors, so a single proof can span from "agent decided to scale the cluster" through "CloudTrail confirmed the scaling" through "the model served its first inference on the new capacity."
+
+```
+Hierarchical Milestone Merkle Tree (v8.1.0)
+  Structure Root (SHA-256)
+    |-- Phase: Foundation
+    |     |-- Milestone: Soil Test
+    |     |     |-- CON-STR.1 PASS (leaf)
+    |     |     |-- CON-ENV.1 PASS (leaf)
+    |     |-- Milestone: Rebar Inspection
+    |           |-- CON-STR.1 PASS (leaf)
+    |-- Phase: Framing
+          |-- Milestone: Steel Erection
+          |     |-- CON-STR.1 PASS (leaf)
+          |     |-- CON-SAF.1 PASS (leaf)
+          |-- [GATE: all Foundation milestones must pass]
+```
+
+**New in this release:**
+- Three-tier Merkle hashing with domain-separated prefixes (`SWT3:MILESTONE:`, `SWT3:PHASE:`, `SWT3:STRUCTURE:`)
+- Phase-gate enforcement with emergency override and scope amendment support
+- Multi-tier inclusion proofs (milestone > phase > structure)
+- Cross-phase consistency checks
+- `swt3 exposure` CLI -- zero-network regulatory exposure calculator
+- 294 procedures, 93 frameworks, 47 adapters, 11 SDK languages
+
+---
+
+## v8.0.0 -- Full Stack Governance
+
+v8.0.0 is the release where SWT3 grows beyond AI inference into full stack governance.
 
 Until now, SWT3 witnessed one thing: AI inference. Your model made a decision, the SDK hashed it, an anchor landed in the ledger. That evidence stream covered what the AI decided but not what happened next. If the AI agent deployed a VPC, modified a security group, or spun up an instance, that infrastructure action lived in a separate audit trail (CloudTrail, Azure Activity Log) with no cryptographic link back to the AI decision that caused it.
 
-v0.8.0 closes the loop. A new companion binary -- [`swt3-infra-witness`](https://github.com/tenova-labs/swt3-infra-witness) -- reads cloud audit logs, extracts 6 canonical fields, computes deterministic hashes, and sends the evidence to the same SWT3 endpoint. Infrastructure anchors land in the same ledger and the same daily Merkle root as AI inference anchors. One tree. Both evidence streams.
+v8.0.0 closes the loop. A new companion binary -- [`swt3-infra-witness`](https://github.com/tenova-labs/swt3-infra-witness) -- reads cloud audit logs, extracts 6 canonical fields, computes deterministic hashes, and sends the evidence to the same SWT3 endpoint. Infrastructure anchors land in the same ledger and the same daily Merkle root as AI inference anchors. One tree. Both evidence streams.
 
 This release also extends SWT3 into physical AI governance. Five new framework crosswalks (EU Machinery Regulation, ISO 10218, OSHA 1926, EU Product Liability Directive, International Building Code) and the activation of the CON (Construction) namespace bring autonomous robotics, AI-driven manufacturing, and physical infrastructure under the same evidence protocol.
 
@@ -87,7 +121,7 @@ The CON namespace is now active with 5 verdict rules live: CON-SAF.1 (site safet
 #### The Unified Tree
 
 ```
-Daily Merkle Root (v0.8.0)
+Daily Merkle Root (v8.0.0)
   |-- AI-INF.1   (model inference -- SDK)
   |-- AI-GRD.1   (guardrail check -- SDK)
   |-- AI-HW.1    (hardware attestation -- SDK)
@@ -97,7 +131,7 @@ Daily Merkle Root (v0.8.0)
   |-- One root, three evidence domains
 ```
 
-A single Merkle membership proof now covers AI decisions, physical AI governance, and infrastructure changes. That is the v0.8.0 story.
+A single Merkle membership proof now covers AI decisions, physical AI governance, and infrastructure changes. That is the v8.0.0 story.
 
 ### Updated Coverage
 
