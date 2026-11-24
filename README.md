@@ -6,7 +6,7 @@ Witness your AI. Prove it followed the rules. Cryptographic accountability for e
 
 **SWT3™ AI Witness SDK for Go**: mint, verify, and sign SWT3 witness anchors with cross-language parity. Zero external dependencies -- standard library only.
 
-**294 procedures | 10 namespaces | 98 frameworks | 11 SDKs | Zero dependencies**
+**294 procedures | 10 namespaces | 189 frameworks | 11 SDKs | Zero dependencies**
 
 Go is the dominant language for backend infrastructure at scale. Kubernetes operators, API gateways, data pipelines, and inference orchestrators are overwhelmingly written in Go. This package gives infrastructure teams the same cryptographic witnessing primitives available in the Python, TypeScript, Rust, C#, Ruby, Swift, and Kotlin SDKs, with zero external dependencies and byte-identical output across all 10 implementations.
 
@@ -16,7 +16,15 @@ EU AI Act GPAI transparency obligations enforced since **August 2, 2026**. High-
 
 ---
 
-- 294 procedures, 98 frameworks, 47 adapters, 11 SDK languages
+## v8.3.0 -- 189-Framework Crosswalk Engine + Task Outcome Attestation
+
+Two changes in this release matter for Go infrastructure teams.
+
+**The crosswalk engine grew from 58 frameworks to 189.** The bundled `crosswalks.json` now maps 294 procedures across EU AI Act, NIST AI RMF, DORA, FSB Sound Practices, CFTC Know-Your-Agent, NERC CIP, 3GPP Release 19, and 150 more. For Go services that sit at the infrastructure layer -- API gateways, Kubernetes operators, data pipeline orchestrators -- this means every witnessed infrastructure event can be resolved to whatever regulatory framework the downstream consumer needs. A CloudTrail event witnessed by `swt3-infra-witness` maps to NIST 800-53, CMMC, FedRAMP, and 186 other frameworks without any configuration change.
+
+**AI-TASK.1 (Task Outcome Attestation)** introduces composite task witnessing for multi-step infrastructure workflows. A Go orchestrator that provisions a VPC, deploys a service, and runs health checks is one task. AI-TASK.1 binds the declared outcome to every constituent step via a Merkle rollup. The `task_id` follows the same deterministic formula as other SWT3 identifiers, verifiable through `MintFingerprint`.
+
+**Also in this release:** Docker AI Governance crosswalk. Vendor model crosswalks for 5 major providers. 404 compliance guides. 294 procedures, 189 frameworks, 47 adapters, 11 SDK languages.
 
 ---
 
@@ -132,14 +140,14 @@ v0.7.9 is the ecosystem adapter release. Four new provider adapters (Groq, Toget
 
 New guides: [OpenAI GPT](https://sovereign.tenova.io/guides/openai-gpt-compliance-witnessing.html) | [Anthropic Claude](https://sovereign.tenova.io/guides/anthropic-claude-compliance-witnessing.html) | [Google Vertex/Gemini](https://sovereign.tenova.io/guides/google-vertex-gemini-compliance-witnessing.html) | [LangChain/LangGraph](https://sovereign.tenova.io/guides/langchain-langgraph-compliance-witnessing.html) | [DeepSeek](https://sovereign.tenova.io/guides/deepseek-gpai-compliance-witnessing.html) | [Groq](https://sovereign.tenova.io/guides/groq-compliance-witnessing.html)
 
-**Why this matters for Go:** Go API gateways, Kubernetes operators, and webhook receivers that verify anchors from mixed-provider environments now cover 47 adapters -- zero module changes via `MintFingerprint`. Go is the natural language for infrastructure that sits between the `@tenova/swt3-mcp` MCP server (75 tools, 98 frameworks) and downstream consumers: an envoy sidecar verifying anchors, a Kubernetes admission controller gating deployments on compliance evidence, or a webhook receiver aggregating anchor streams from multiple MCP servers. Every adapter-produced fingerprint is byte-identical to this module's output.
+**Why this matters for Go:** Go API gateways, Kubernetes operators, and webhook receivers that verify anchors from mixed-provider environments now cover 47 adapters -- zero module changes via `MintFingerprint`. Go is the natural language for infrastructure that sits between the `@tenova/swt3-mcp` MCP server (75 tools, 189 frameworks) and downstream consumers: an envoy sidecar verifying anchors, a Kubernetes admission controller gating deployments on compliance evidence, or a webhook receiver aggregating anchor streams from multiple MCP servers. Every adapter-produced fingerprint is byte-identical to this module's output.
 
 v0.7.9 also aligns all MCP discovery metadata (`mcp.json`, `agent-card.json`, `llms.txt`, `server.json`) to report identical version numbers and counts. Agent discovery bots and MCP crawlers see consistent metadata everywhere.
 
 ### Updated Coverage
 
 - 294 procedures across 10 namespaces
-- 93 regulatory frameworks, 348 compliance guides, 47 adapters, 11 SDK languages
+- 189 regulatory frameworks, 404 compliance guides, 47 adapters, 11 SDK languages
 
 ## What's New in v0.7.8
 
@@ -167,7 +175,7 @@ The three largest cloud AI platforms -- IBM watsonx, AWS Bedrock, and Mistral --
 
 ### Updated Coverage
 
-- 294 procedures across 10 namespaces, 93 regulatory frameworks, 348 compliance guides
+- 294 procedures across 10 namespaces, 189 regulatory frameworks, 404 compliance guides
 - [Distillation Lineage Governance](https://sovereign.tenova.io/guides/distillation-lineage-governance-crosswalk.html) | [Federated Learning Governance](https://sovereign.tenova.io/guides/federated-learning-governance-crosswalk.html) | [Synthetic Data Provenance](https://sovereign.tenova.io/guides/synthetic-data-provenance-governance-crosswalk.html)
 
 ## What's New in v0.7.6
@@ -185,7 +193,7 @@ Five standards bodies converged on agent governance requirements in Q3-Q4 2026. 
 ### Updated Coverage
 
 - 294 procedures across 10 namespaces
-- 93 regulatory frameworks, 348 compliance guides
+- 189 regulatory frameworks, 404 compliance guides
 - [G7 AI-SBOM Crosswalk](https://sovereign.tenova.io/guides/g7-ai-sbom-minimum-elements-crosswalk.html) | [DORA + ECB Crosswalk](https://sovereign.tenova.io/guides/dora-ecb-ai-cyber-crosswalk.html)
 
 ## What's New in v0.7.4
@@ -248,7 +256,7 @@ Two gaps closed in one release: harness-layer governance and zero-code MCP compl
 - 280 procedures across 77 namespaces (was 275/77)
 - 68 MCP tools (was 63)
 - 11 SDK languages with byte-identical output
-- 77 framework crosswalks, 265 compliance guides
+- 189 framework crosswalks, 404 compliance guides
 - ~3,000 tests passing across 10 languages
 
 ## What's New in v0.7.1
